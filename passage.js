@@ -1,14 +1,17 @@
 (function(){
 	window.passage = {
 		color: 'rgba(100,100,100,0.5)',
-		reverseColor: 'rgba(200,200,100,0.5)',
+		reverseColor: 'rgba(100,100,100,0.5)',
 		complete: false,
 		decaySpeed: 0.02,
+		fillColor: 'rgba(0, 200, 0, 0.5)',
+		reverseFillColor: 'rgba(255, 161, 0, 0.5)',
 		index: 0,
+		leadScroll: 30,
 		progress: 0,
 		radius: 30,
 		stroke: 10,
-		sensitivity: .02,
+		sensitivity: .05,
 		sleepPeriod: 1000,
 		threshold: 100,
 	};
@@ -44,6 +47,10 @@
 		};
 
 		this.decaySpinner = function(){
+			var currentTop = passage.sections[passage.index].offsetTop;			
+			
+			scrollTo(0, currentTop + passage.progress * passage.leadScroll);
+
 			passage.complete = false;
 			if(passage.progress === 0){
 				return clearTimeout(passage.decayTimer);
@@ -65,7 +72,7 @@
 
 			ctx.beginPath();
 			ctx.arc(passage.width / 2, passage.height / 2, passage.radius - passage.stroke / 2 - 2, 0, Math.PI * 2, false);
-			ctx.fillStyle = 'rgba(0, 200, 0, 0.5)';
+			ctx.fillStyle = (passage.progress > 0) ? passage.fillColor : passage.reverseFillColor;
 			ctx.fill();
 
 			setTimeout(function(){
@@ -84,7 +91,7 @@
 			var ctx = passage.context;
 			ctx.beginPath();
 			ctx.arc(passage.width / 2, passage.height / 2, (passage.radius - passage.stroke / 2 - 2) * (extra / 30), 0, Math.PI * 2, false);
-			ctx.fillStyle = 'rgba(0, 200, 0, 0.5)';
+			ctx.fillStyle = (passage.progress > 0) ? passage.fillColor : passage.reverseFillColor;
 			ctx.fill();
 
 			setTimeout(function(){
@@ -110,36 +117,45 @@
 
 	var mouseWheelHandler = function(event){
 		var event = window.event || event,
-			delta = (event.wheelDeltaY < 0) ? event.wheelDeltaY : event.wheelDeltaY,
-			increment = -delta / 100;
+			delta = event.wheelDeltaY,
+			increment = -delta / 100,
+			currentTop = passage.sections[passage.index].offsetTop;
 
 		if(passage.decayTimer){
 			clearTimeout(passage.decayTimer);
 		}
 
-		passage.progress = Math.min(1, passage.progress + increment * passage.sensitivity);
+		passage.progress += increment * passage.sensitivity;
+		if(passage.progress > 1){
+			passage.progress = 1;
+		} else if(passage.progress < -1){
+			passage.progress = -1;
+		}
 
-		if(passage.progress === 1 && !passage.complete){
+		if((passage.progress === 1 || passage.progress === -1) && !passage.complete){
 			passage.complete = true;
 			passage.spinner.updateSpinner(passage.progress);
 			passage.spinner.completeSpinner();
 
-			if(passage.index + 1 < passage.sections.length){
-				passage.index++;
+			if(passage.index + passage.progress < passage.sections.length && passage.index + passage.progress > -1){
+				passage.index += passage.progress;
 				goToSection(passage.index);
 			}
 		} else if (!passage.complete){
 			passage.spinner.updateSpinner(passage.progress);
+
+			// a little lead-scroll
+			scrollTo(0, currentTop + passage.progress * passage.leadScroll);
 		}
 
 		event.preventDefault();
 	};
 
 	var goToSection = function(index){
-		scrollTo(passage.sections[index], 1000);
+		scrollToElement(passage.sections[index], 1000);
 	};
 
-	var scrollTo = function(element, duration) {
+	var scrollToElement = function(element, duration) {
 		var initial = window.scrollY,
 			amount = element.offsetTop - window.scrollY;
 
@@ -155,7 +171,7 @@
     	x = x<.5 ? 2*x*x : -1+(4-2*x)*x; // easing with quad in-out
 
     	var position = Math.ceil(initial + x * amount);
-		document.body.scrollTop = position;
+		scrollTo(0, position);
 
 		setTimeout(function(){
 			scrollTick(t + 10, initial, amount);
