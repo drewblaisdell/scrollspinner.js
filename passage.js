@@ -14,6 +14,8 @@
 	};
 
 	function Spinner(){
+		var that = this;
+
 		this.createSpinner = function(){
 			var canvas = document.createElement('canvas');
 			canvas.id = 'passage';
@@ -34,7 +36,7 @@
 
 			if(percent < 1 && percent > -1){
 				passage.sleepTimer = setTimeout(function(){
-					passage.spinner.decaySpinner();
+					that.decaySpinner();
 				}, passage.sleepPeriod);
 			}
 			
@@ -55,7 +57,7 @@
 			
 			drawArc(passage.progress);
 
-			passage.decayTimer = setTimeout(passage.spinner.decaySpinner, 20);
+			passage.decayTimer = setTimeout(that.decaySpinner, 20);
 		};
 
 		this.completeSpinner = function(){
@@ -67,7 +69,7 @@
 			ctx.fill();
 
 			setTimeout(function(){
-				passage.spinner.completeSpinnerTick(30);
+				that.completeSpinnerTick(30);
 			}, 500);
 			
 		};
@@ -86,7 +88,7 @@
 			ctx.fill();
 
 			setTimeout(function(){
-				passage.spinner.completeSpinnerTick(extra - 1);
+				that.completeSpinnerTick(extra - 1);
 			}, 20);
 		};
 
@@ -122,7 +124,6 @@
 			passage.spinner.updateSpinner(passage.progress);
 			passage.spinner.completeSpinner();
 
-			console.log(passage.index);
 			if(passage.index + 1 < passage.sections.length){
 				passage.index++;
 				goToSection(passage.index);
@@ -139,18 +140,27 @@
 	};
 
 	var scrollTo = function(element, duration) {
-        if (duration < 0) return;
-        var difference = window.scrollY - element.offsetTop;
-        var perTick = -difference / duration * 10;
-		if(isNaN(perTick)){
-			return false;
-		}
+		var initial = window.scrollY,
+			amount = element.offsetTop - window.scrollY;
 
-        setTimeout(function() {
-            document.body.scrollTop += perTick;
-            scrollTo(element, duration - 10);
-        }, 10);
+		scrollTick(0, initial, amount);
     };
+
+    var scrollTick = function(t, initial, amount){
+    	if(t === 1000){
+    		return;
+    	}
+
+    	var x = t / 1000;
+    	x = x<.5 ? 2*x*x : -1+(4-2*x)*x; // easing with quad in-out
+
+    	var position = Math.ceil(initial + x * amount);
+		document.body.scrollTop = position;
+
+		setTimeout(function(){
+			scrollTick(t + 10, initial, amount);
+		});
+	};
 
 	var drawArc = function(percent){
 		var ctx = passage.context,
