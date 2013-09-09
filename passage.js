@@ -1,5 +1,6 @@
 (function(){
-	window.passage = {
+	var root = this;
+	var config = {
 		color: 'rgba(100,100,100,0.5)',
 		reverseColor: 'rgba(100,100,100,0.5)',
 		complete: false,
@@ -22,57 +23,57 @@
 		this.createSpinner = function(){
 			var canvas = document.createElement('canvas');
 			canvas.id = 'passage';
-			canvas.width = passage.width;
-			canvas.height = passage.height;
+			canvas.width = root.width;
+			canvas.height = root.height;
 			canvas.style.position = 'fixed';
 			canvas.style.bottom = '5px';
 			canvas.style.right = '5px';
 
-			passage.context = canvas.getContext('2d');
+			root.context = canvas.getContext('2d');
 			document.body.appendChild(canvas);
 		};
 
 		this.updateSpinner = function(percent){
-			if(passage.sleepTimer){
-				clearTimeout(passage.sleepTimer);
+			if(root.sleepTimer){
+				clearTimeout(root.sleepTimer);
 			}
 
 			if(percent < 1 && percent > -1){
-				passage.sleepTimer = setTimeout(function(){
+				root.sleepTimer = setTimeout(function(){
 					that.decaySpinner();
-				}, passage.sleepPeriod);
+				}, config.sleepPeriod);
 			}
 			
 			drawArc(percent);
 		};
 
 		this.decaySpinner = function(){
-			var currentTop = passage.sections[passage.index].offsetTop;			
+			var currentTop = root.sections[config.index].offsetTop;			
 			
-			scrollTo(0, currentTop + passage.progress * passage.leadScroll);
+			scrollTo(0, currentTop + config.progress * config.leadScroll);
 
-			passage.complete = false;
-			if(passage.progress === 0){
-				return clearTimeout(passage.decayTimer);
+			config.complete = false;
+			if(config.progress === 0){
+				return clearTimeout(root.decayTimer);
 			}
 
-			if(passage.progress > 0){
-				passage.progress = (passage.progress > passage.decaySpeed) ? passage.progress - passage.decaySpeed : 0;
+			if(config.progress > 0){
+				config.progress = (config.progress > config.decaySpeed) ? config.progress - config.decaySpeed : 0;
 			} else {
-				passage.progress = (passage.progress < passage.decaySpeed) ? passage.progress + passage.decaySpeed : 0;
+				config.progress = (config.progress < config.decaySpeed) ? config.progress + config.decaySpeed : 0;
 			}
 			
-			drawArc(passage.progress);
+			drawArc(config.progress);
 
-			passage.decayTimer = setTimeout(that.decaySpinner, 20);
+			root.decayTimer = setTimeout(that.decaySpinner, 20);
 		};
 
 		this.completeSpinner = function(){
-			var ctx = passage.context;
+			var ctx = root.context;
 
 			ctx.beginPath();
-			ctx.arc(passage.width / 2, passage.height / 2, passage.radius - passage.stroke / 2 - 2, 0, Math.PI * 2, false);
-			ctx.fillStyle = (passage.progress > 0) ? passage.fillColor : passage.reverseFillColor;
+			ctx.arc(root.width / 2, root.height / 2, config.radius - config.stroke / 2 - 2, 0, Math.PI * 2, false);
+			ctx.fillStyle = (config.progress > 0) ? config.fillColor : config.reverseFillColor;
 			ctx.fill();
 
 			setTimeout(function(){
@@ -88,10 +89,10 @@
 			
 			drawArc(extra / 30);
 
-			var ctx = passage.context;
+			var ctx = root.context;
 			ctx.beginPath();
-			ctx.arc(passage.width / 2, passage.height / 2, (passage.radius - passage.stroke / 2 - 2) * (extra / 30), 0, Math.PI * 2, false);
-			ctx.fillStyle = (passage.progress > 0) ? passage.fillColor : passage.reverseFillColor;
+			ctx.arc(root.width / 2, root.height / 2, (config.radius - config.stroke / 2 - 2) * (extra / 30), 0, Math.PI * 2, false);
+			ctx.fillStyle = (config.progress > 0) ? config.fillColor : config.reverseFillColor;
 			ctx.fill();
 
 			setTimeout(function(){
@@ -100,17 +101,17 @@
 		};
 
 		this.completeSpinnerEnd = function(){
-			passage.complete = false;
-			passage.progress = 0;
+			config.complete = false;
+			config.progress = 0;
 		};
 	}
 
 	var init = function(){
-		passage.width = passage.radius * 2 + passage.stroke * 2;
-		passage.height = passage.radius * 2 + passage.stroke * 2;
-		passage.sections = document.getElementsByTagName('section');
-		passage.spinner = new Spinner();
-		passage.spinner.createSpinner();
+		root.width = config.radius * 2 + config.stroke * 2;
+		root.height = config.radius * 2 + config.stroke * 2;
+		root.sections = document.getElementsByTagName('section');
+		root.spinner = new Spinner();
+		root.spinner.createSpinner();
 
 		document.addEventListener('mousewheel', mouseWheelHandler);
 	};
@@ -119,40 +120,40 @@
 		var event = window.event || event,
 			delta = event.wheelDeltaY,
 			increment = -delta / 100,
-			currentTop = passage.sections[passage.index].offsetTop;
+			currentTop = root.sections[config.index].offsetTop;
 
-		if(passage.decayTimer){
-			clearTimeout(passage.decayTimer);
+		if(root.decayTimer){
+			clearTimeout(root.decayTimer);
 		}
 
-		passage.progress += increment * passage.sensitivity;
-		if(passage.progress > 1){
-			passage.progress = 1;
-		} else if(passage.progress < -1){
-			passage.progress = -1;
+		config.progress += increment * config.sensitivity;
+		if(config.progress > 1){
+			config.progress = 1;
+		} else if(config.progress < -1){
+			config.progress = -1;
 		}
 
-		if((passage.progress === 1 || passage.progress === -1) && !passage.complete){
-			passage.complete = true;
-			passage.spinner.updateSpinner(passage.progress);
-			passage.spinner.completeSpinner();
+		if((config.progress === 1 || config.progress === -1) && !config.complete){
+			config.complete = true;
+			root.spinner.updateSpinner(config.progress);
+			root.spinner.completeSpinner();
 
-			if(passage.index + passage.progress < passage.sections.length && passage.index + passage.progress > -1){
-				passage.index += passage.progress;
-				goToSection(passage.index);
+			if(config.index + config.progress < root.sections.length && config.index + config.progress > -1){
+				config.index += config.progress;
+				goToSection(config.index);
 			}
-		} else if (!passage.complete){
-			passage.spinner.updateSpinner(passage.progress);
+		} else if (!config.complete){
+			root.spinner.updateSpinner(config.progress);
 
 			// a little lead-scroll
-			scrollTo(0, currentTop + passage.progress * passage.leadScroll);
+			scrollTo(0, currentTop + config.progress * config.leadScroll);
 		}
 
 		event.preventDefault();
 	};
 
 	var goToSection = function(index){
-		scrollToElement(passage.sections[index], 1000);
+		scrollToElement(root.sections[index], 1000);
 	};
 
 	var scrollToElement = function(element, duration) {
@@ -179,10 +180,10 @@
 	};
 
 	var drawArc = function(percent){
-		var ctx = passage.context,
+		var ctx = root.context,
 			reverse = (percent < 0) ? true : false;
 		if(percent === 0){
-			ctx.clearRect(0, 0, passage.width, passage.height);
+			ctx.clearRect(0, 0, root.width, root.height);
 			return false;
 		} else if(percent === 1 || percent === -1){
 			startAngle = 0;
@@ -197,14 +198,14 @@
 			}
 		}
 
-		ctx.clearRect(0, 0, passage.width, passage.height);
+		ctx.clearRect(0, 0, root.width, root.height);
 		ctx.beginPath();
-		ctx.arc(passage.width / 2, passage.height / 2, passage.radius, startAngle, endAngle, reverse);
+		ctx.arc(root.width / 2, root.height / 2, config.radius, startAngle, endAngle, reverse);
 		ctx.lineWidth = 10;
 		if(reverse){
-			ctx.strokeStyle = passage.reverseColor;
+			ctx.strokeStyle = config.reverseColor;
 		} else {
-			ctx.strokeStyle = passage.color;
+			ctx.strokeStyle = config.color;
 		}
 		ctx.stroke();
 		ctx.closePath();
