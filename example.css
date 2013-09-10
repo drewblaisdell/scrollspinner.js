@@ -10,7 +10,7 @@ h1, h2, h3, h4, h5, h6 {
 
 h1 {
 	text-align: center;
-	font-size: 9em;
+	font-size: 100px;
 }
 
 h2 {
@@ -19,4 +19,26 @@ h2 {
 
 section {
 	height: 1000px;
+}
+
+.three-column {
+	-webkit-column-count: 3;
+	-webkit-column-gap: 50px;
+	font-size: 1em;
+	height: 500px;
+	margin: 20px 20px 500px 20px;
+}
+
+.headline {
+	text-align: left;
+	font-size: 2em;
+	margin-left: 16px;
+	padding-top: 15px;
+	border-bottom: solid 1px black;
+	padding-bottom: 7px;
+}
+
+p {
+	margin-top: 0;
+	font-size: 15px;
 }

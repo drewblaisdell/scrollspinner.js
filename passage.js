@@ -1,5 +1,6 @@
 (function(){
 	var root = this;
+
 	var config = {
 		color: 'rgba(100,100,100,0.5)',
 		reverseColor: 'rgba(100,100,100,0.5)',
@@ -127,6 +128,14 @@
 		}
 
 		config.progress += increment * config.sensitivity;
+
+		if((config.progress < 0 && config.index === 0) ||
+			(config.progress > 0 && config.index === root.sections.length - 1)){
+			config.progress = 0;
+		}
+
+
+
 		if(config.progress > 1){
 			config.progress = 1;
 		} else if(config.progress < -1){
