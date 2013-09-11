@@ -13,9 +13,10 @@
 		progress: 0,
 		radius: 30,
 		stroke: 10,
-		sensitivity: .05,
+		mouseSensitivity: .05,
 		sleepPeriod: 1000,
 		threshold: 100,
+		touchSensitivity: 2
 	};
 
 	function Spinner(){
@@ -115,26 +116,24 @@
 		root.spinner.createSpinner();
 
 		document.addEventListener('mousewheel', mouseWheelHandler);
+		document.addEventListener('touchstart', touchStartHandler);
+		document.addEventListener('touchmove', touchMoveHandler);
 	};
 
-	var mouseWheelHandler = function(event){
-		var event = window.event || event,
-			delta = event.wheelDeltaY,
-			increment = -delta / 100,
+	var movementHandler = function(delta){
+		var increment = -delta,
 			currentTop = root.sections[config.index].offsetTop;
 
 		if(root.decayTimer){
 			clearTimeout(root.decayTimer);
 		}
 
-		config.progress += increment * config.sensitivity;
+		config.progress += increment;
 
 		if((config.progress < 0 && config.index === 0) ||
 			(config.progress > 0 && config.index === root.sections.length - 1)){
 			config.progress = 0;
 		}
-
-
 
 		if(config.progress > 1){
 			config.progress = 1;
@@ -157,6 +156,36 @@
 			// a little lead-scroll
 			scrollTo(0, currentTop + config.progress * config.leadScroll);
 		}
+	};
+
+	var mouseWheelHandler = function(event){
+		var event = window.event || event,
+			delta = event.wheelDeltaY / 100 * config.mouseSensitivity;
+
+		movementHandler(delta);
+
+		event.preventDefault();
+	};
+
+	var touchStartHandler = function(event){
+		var touch = event.touches[0],
+			x = touch.pageX,
+			y = touch.pageY;
+	
+		root.lastY = y;
+	};
+
+	var touchMoveHandler = function(event){
+		var touch = event.touches[0],
+			x = touch.pageX,
+			y = touch.pageY,
+			delta = (root.lastY - y);
+
+		root.lastY = y;
+
+		delta /= 100 * config.touchSensitivity;
+
+		movementHandler(delta);
 
 		event.preventDefault();
 	};
