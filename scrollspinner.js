@@ -121,21 +121,21 @@
 		}
 
 		var increment = -delta,
-			currentTop = root.sections[config.index].offsetTop,
-			rect = root.sections[config.index].getBoundingClientRect();
+			rect = root.sections[config.index].getBoundingClientRect(),
+			scrollTop = document.body.scrollTop;
 
 		if(root.decayTimer){
 			clearTimeout(root.decayTimer);
 		}
 
-		if((config.progress > 0 && config.progress + increment < 0) ||
-		(config.progress < 0 && config.progress + increment > 0)){
+		if( (config.progress > 0 && config.progress + increment < 0) ||
+			(config.progress < 0 && config.progress + increment > 0) ){
 			config.progress = 0;
 		} else {
 			config.progress += increment;
 		}
 
-		// if((config.progress < 0 && config.index === 0) ||
+		// if((config.progress < 0 && config.index === 0 && document.body.scrollTop <= 0) ||
 		// 	(config.progress > 0 && config.index === root.sections.length - 1)){
 		// 	config.progress = 0;
 		// }
@@ -167,8 +167,10 @@
 				scrollStart = root.offsets[config.index].top;
 			}
 
-			// a little lead-scroll
-			scrollTo(0, scrollStart + config.progress * config.leadScroll);
+			if(config.progress !== 0){
+				// a little lead-scroll
+				scrollTo(0, scrollStart + config.progress * config.leadScroll);
+			}
 		}
 	};
 
@@ -207,6 +209,8 @@
 			return true;
 		} else if(scrollTop > scrollStartTop && config.progress <= 0){
 			return true;
+		} else if(config.index === 0){
+			return true;
 		}
 
 		movementHandler(progressDelta);
@@ -226,11 +230,26 @@
 		var touch = event.touches[0],
 			x = touch.pageX,
 			y = touch.pageY,
-			delta = (root.lastY - y);
+			delta = (root.lastY - y),
+			offsets = root.offsets[config.index],
+			scrollStartTop = offsets.top,
+			scrollStartBottom = offsets.bottom,
+			scrollTop = document.body.scrollTop;
 
 		root.lastY = y;
 
 		delta /= 100 * config.touchSensitivity;
+
+		var newScrollBottom = scrollTop + windowHeight - delta,
+			newScrollTop = scrollTop - delta;
+
+		if(scrollTop + windowHeight - delta > scrollStartBottom){
+	//		document.body.scrollTop = scrollStartBottom;
+		} else if(newScrollBottom < scrollStartBottom && config.progress === 0 && delta < 0){
+			return true;
+		} else if(scrollTop > scrollStartTop && config.progress <= 0){
+			return true;
+		}
 
 		movementHandler(delta);
 

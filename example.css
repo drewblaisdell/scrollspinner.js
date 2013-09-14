@@ -1,6 +1,5 @@
 body {
 	margin: 0;
-	height: 2000px;
 	font-family: 'Helvetica', Arial;
 }
 
@@ -26,7 +25,7 @@ section {
 	-webkit-column-gap: 50px;
 	font-size: 1em;
 	height: 500px;
-	margin: 20px 20px 500px 20px;
+/*	margin: 20px 20px 500px 20px;*/
 }
 
 .headline {
@@ -46,5 +45,9 @@ p {
 @media (max-width: 481px) {
 	h1 {
 		font-size: 66px;
+	}
+
+	section {
+		overflow: hidden;
 	}
 }
