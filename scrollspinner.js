@@ -209,7 +209,7 @@
 			return true;
 		} else if(scrollTop > scrollStartTop && config.progress <= 0){
 			return true;
-		} else if(config.index === 0){
+		} else if(scrollTop <= 0){
 			return true;
 		}
 
@@ -257,6 +257,12 @@
 	};
 
 	var goToSection = function(index){
+		if(typeof root.callbacks[index] === 'object'){
+			if(typeof root.callbacks[index].scrollStart === 'function'){
+				root.callbacks[index].scrollStart();
+			}
+		}
+
 		scrollToElement(root.sections[index], config.scrollTime);
 	};
 
@@ -269,7 +275,7 @@
 
     var scrollTick = function(t, initial, amount){
     	if(t === config.scrollTime){
-    		return;
+    		return scrollEnd();
     	}
 
     	var x = t / config.scrollTime;
@@ -281,6 +287,14 @@
 		setTimeout(function(){
 			scrollTick(t + 10, initial, amount);
 		});
+	};
+
+	var scrollEnd = function(){
+		if(typeof root.callbacks[config.index] === 'object'){
+			if(typeof root.callbacks[config.index].scrollEnd === 'function'){
+				root.callbacks[config.index].scrollEnd();
+			}
+		}
 	};
 
 	var drawArc = function(percent){
@@ -323,6 +337,11 @@
 		root.spinner = new Spinner();
 		root.spinner.createSpinner();
 		root.offsets = [];
+		root.callbacks = {};
+
+		if(typeof scrollSpinner === 'object'){
+			root.callbacks = scrollSpinner;
+		}
 
 		var i, l = root.sections.length;
 		for(i = 0; i < l; i++){
