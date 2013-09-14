@@ -12,6 +12,7 @@
 		leadScroll: 30,
 		progress: 0,
 		radius: 30,
+		scrollTime: 1000,
 		stroke: 10,
 		mouseSensitivity: .05,
 		sleepPeriod: 1000,
@@ -115,9 +116,20 @@
 		root.spinner = new Spinner();
 		root.spinner.createSpinner();
 
-		document.addEventListener('mousewheel', mouseWheelHandler);
-		document.addEventListener('touchstart', touchStartHandler);
-		document.addEventListener('touchmove', touchMoveHandler);
+		var i, l = root.sections.length;
+		for(i = 0; i < l; i++){
+			root.sections[i].style.height = window.innerHeight +'px';
+		}
+
+		if(document.attachEvent){
+			document.attachEvent('onmousewheel', mouseWheelHandler);
+		} else if(document.addEventListener){
+			document.addEventListener('mousewheel', mouseWheelHandler);
+			document.addEventListener('DOMMouseScroll', mouseWheelHandler);
+			document.addEventListener('touchstart', touchStartHandler);
+			document.addEventListener('touchmove', touchMoveHandler);
+
+		}
 	};
 
 	var movementHandler = function(delta){
@@ -160,9 +172,21 @@
 
 	var mouseWheelHandler = function(event){
 		var event = window.event || event,
-			delta = event.wheelDeltaY / 100 * config.mouseSensitivity;
+			delta = event.wheelDeltaY || -event.detail,
+			progressDelta = delta / 100 * config.mouseSensitivity;
 
-		movementHandler(delta);
+		if(!config.firstDelta){
+			config.firstDelta = delta;
+			if(Math.abs(delta) > 25 || !event.wheelDeltaY){
+				config.mouseSensitivity = 0.5;
+			}
+
+			if(!event.wheelDeltaY){
+				config.scrollTime = 500;
+			}
+		}
+
+		movementHandler(progressDelta);
 
 		event.preventDefault();
 	};
@@ -191,7 +215,7 @@
 	};
 
 	var goToSection = function(index){
-		scrollToElement(root.sections[index], 1000);
+		scrollToElement(root.sections[index], config.scrollTime);
 	};
 
 	var scrollToElement = function(element, duration) {
@@ -202,11 +226,11 @@
     };
 
     var scrollTick = function(t, initial, amount){
-    	if(t === 1000){
+    	if(t === config.scrollTime){
     		return;
     	}
 
-    	var x = t / 1000;
+    	var x = t / config.scrollTime;
     	x = x<.5 ? 2*x*x : -1+(4-2*x)*x; // easing with quad in-out
 
     	var position = Math.ceil(initial + x * amount);
