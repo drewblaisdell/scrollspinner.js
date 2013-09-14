@@ -12,7 +12,7 @@
 		leadScroll: 30,
 		progress: 0,
 		radius: 30,
-		scrollTime: 1000,
+		scrollTime: 1500,
 		stroke: 10,
 		mouseSensitivity: .05,
 		sleepPeriod: 1000,
@@ -51,14 +51,20 @@
 		};
 
 		this.decaySpinner = function(){
-			var currentTop = root.sections[config.index].offsetTop;			
-			
-			scrollTo(0, currentTop + config.progress * config.leadScroll);
-
-			config.complete = false;
 			if(config.progress === 0){
 				return clearTimeout(root.decayTimer);
 			}
+
+			var scrollStart;
+			if(config.progress > 0){
+				scrollStart = root.offsets[config.index].bottom - window.innerHeight;
+			} else {
+				scrollStart = root.offsets[config.index].top;
+			}
+
+			scrollTo(0, scrollStart + config.progress * config.leadScroll);
+
+			config.complete = false;
 
 			if(config.progress > 0){
 				config.progress = (config.progress > config.decaySpeed) ? config.progress - config.decaySpeed : 0;
@@ -109,43 +115,30 @@
 		};
 	}
 
-	var init = function(){
-		root.width = config.radius * 2 + config.stroke * 2;
-		root.height = config.radius * 2 + config.stroke * 2;
-		root.sections = document.getElementsByTagName('section');
-		root.spinner = new Spinner();
-		root.spinner.createSpinner();
-
-		var i, l = root.sections.length;
-		for(i = 0; i < l; i++){
-			root.sections[i].style.height = window.innerHeight +'px';
-		}
-
-		if(document.attachEvent){
-			document.attachEvent('onmousewheel', mouseWheelHandler);
-		} else if(document.addEventListener){
-			document.addEventListener('mousewheel', mouseWheelHandler);
-			document.addEventListener('DOMMouseScroll', mouseWheelHandler);
-			document.addEventListener('touchstart', touchStartHandler);
-			document.addEventListener('touchmove', touchMoveHandler);
-
-		}
-	};
-
 	var movementHandler = function(delta){
+		if(delta < 0){
+			delta = Math.max(-0.2, delta);
+		}
+
 		var increment = -delta,
-			currentTop = root.sections[config.index].offsetTop;
+			currentTop = root.sections[config.index].offsetTop,
+			rect = root.sections[config.index].getBoundingClientRect();
 
 		if(root.decayTimer){
 			clearTimeout(root.decayTimer);
 		}
 
-		config.progress += increment;
-
-		if((config.progress < 0 && config.index === 0) ||
-			(config.progress > 0 && config.index === root.sections.length - 1)){
+		if((config.progress > 0 && config.progress + increment < 0) ||
+		(config.progress < 0 && config.progress + increment > 0)){
 			config.progress = 0;
+		} else {
+			config.progress += increment;
 		}
+
+		// if((config.progress < 0 && config.index === 0) ||
+		// 	(config.progress > 0 && config.index === root.sections.length - 1)){
+		// 	config.progress = 0;
+		// }
 
 		if(config.progress > 1){
 			config.progress = 1;
@@ -154,6 +147,7 @@
 		}
 
 		if((config.progress === 1 || config.progress === -1) && !config.complete){
+			// complete
 			config.complete = true;
 			root.spinner.updateSpinner(config.progress);
 			root.spinner.completeSpinner();
@@ -163,20 +157,34 @@
 				goToSection(config.index);
 			}
 		} else if (!config.complete){
+			// incomplete
 			root.spinner.updateSpinner(config.progress);
 
+			var scrollStart;
+			if(config.progress > 0){
+				scrollStart = root.offsets[config.index].bottom - window.innerHeight;
+			} else {
+				scrollStart = root.offsets[config.index].top;
+			}
+
 			// a little lead-scroll
-			scrollTo(0, currentTop + config.progress * config.leadScroll);
+			scrollTo(0, scrollStart + config.progress * config.leadScroll);
 		}
 	};
 
 	var mouseWheelHandler = function(event){
 		var event = window.event || event,
 			delta = event.wheelDeltaY || -event.detail,
-			progressDelta = delta / 100 * config.mouseSensitivity;
+			progressDelta = delta / 100 * config.mouseSensitivity,
+			offsets = root.offsets[config.index],
+			scrollStartTop = offsets.top,
+			scrollStartBottom = offsets.bottom,
+			scrollTop = document.body.scrollTop,
+			windowHeight = window.innerHeight;
 
 		if(!config.firstDelta){
 			config.firstDelta = delta;
+
 			if(Math.abs(delta) > 25 || !event.wheelDeltaY){
 				config.mouseSensitivity = 0.5;
 			}
@@ -184,6 +192,21 @@
 			if(!event.wheelDeltaY){
 				config.scrollTime = 500;
 			}
+		}
+
+		if(root.decayTimer){
+			clearTimeout(root.decayTimer)
+		}
+
+		var newScrollBottom = scrollTop + windowHeight - delta,
+			newScrollTop = scrollTop - delta;
+
+		if(scrollTop + windowHeight - delta > scrollStartBottom){
+	//		document.body.scrollTop = scrollStartBottom;
+		} else if(newScrollBottom < scrollStartBottom && config.progress === 0 && delta < 0){
+			return true;
+		} else if(scrollTop > scrollStartTop && config.progress <= 0){
+			return true;
 		}
 
 		movementHandler(progressDelta);
@@ -271,6 +294,32 @@
 		}
 		ctx.stroke();
 		ctx.closePath();
+	};
+
+	var init = function(){
+		scrollTo(0, 0);
+		root.width = config.radius * 2 + config.stroke * 2;
+		root.height = config.radius * 2 + config.stroke * 2;
+		root.sections = document.getElementsByTagName('section');
+		root.spinner = new Spinner();
+		root.spinner.createSpinner();
+		root.offsets = [];
+
+		var i, l = root.sections.length;
+		for(i = 0; i < l; i++){
+			var rect = root.sections[i].getBoundingClientRect();
+			root.offsets.push({ top: rect.top, bottom: rect.bottom });
+		}
+
+		if(document.attachEvent){
+			document.attachEvent('onmousewheel', mouseWheelHandler);
+		} else if(document.addEventListener){
+			document.addEventListener('mousewheel', mouseWheelHandler);
+			document.addEventListener('DOMMouseScroll', mouseWheelHandler);
+			document.addEventListener('touchstart', touchStartHandler);
+			document.addEventListener('touchmove', touchMoveHandler);
+
+		}
 	};
 
 	document.addEventListener('DOMContentLoaded', init);
