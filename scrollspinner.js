@@ -1,4 +1,5 @@
 (function(){
+// TODO: make this more specific, with headings by the spinner, with full screen pages
 	var root = this;
 
 	var config = {
