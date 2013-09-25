@@ -1,6 +1,6 @@
 body {
 	margin: 0;
-	font-family: 'proxima-nova';
+	font-family: 'proxima-nova', Helvetica;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -17,15 +17,13 @@ h2 {
 }
 
 section {
-	height: 1300px;
+	height: 100%;
 }
 
 .three-column {
 	-webkit-column-count: 3;
 	-webkit-column-gap: 50px;
 	font-size: 1em;
-	height: 500px;
-/*	margin: 20px 20px 500px 20px;*/
 }
 
 .headline {

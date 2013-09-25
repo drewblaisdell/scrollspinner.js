@@ -1,5 +1,4 @@
 (function(){
-// TODO: make this more specific, with headings by the spinner, with full screen pages
 	var root = this;
 
 	var config = {
@@ -13,7 +12,7 @@
 		leadScroll: 30,
 		progress: 0,
 		radius: 30,
-		scrollTime: 1500,
+		scrollTime: 1000,
 		stroke: 10,
 		mouseSensitivity: .05,
 		sleepPeriod: 1000,
@@ -52,20 +51,14 @@
 		};
 
 		this.decaySpinner = function(){
+			var currentTop = root.sections[config.index].offsetTop;			
+			
+			scrollTo(0, currentTop + config.progress * config.leadScroll);
+
+			config.complete = false;
 			if(config.progress === 0){
 				return clearTimeout(root.decayTimer);
 			}
-
-			var scrollStart;
-			if(config.progress > 0){
-				scrollStart = root.offsets[config.index].bottom - window.innerHeight;
-			} else {
-				scrollStart = root.offsets[config.index].top;
-			}
-
-			scrollTo(0, scrollStart + config.progress * config.leadScroll);
-
-			config.complete = false;
 
 			if(config.progress > 0){
 				config.progress = (config.progress > config.decaySpeed) ? config.progress - config.decaySpeed : 0;
@@ -116,30 +109,43 @@
 		};
 	}
 
-	var movementHandler = function(delta){
-		if(delta < 0){
-			delta = Math.max(-0.2, delta);
+	var init = function(){
+		root.width = config.radius * 2 + config.stroke * 2;
+		root.height = config.radius * 2 + config.stroke * 2;
+		root.sections = document.getElementsByTagName('section');
+		root.spinner = new Spinner();
+		root.spinner.createSpinner();
+
+		var i, l = root.sections.length;
+		for(i = 0; i < l; i++){
+			root.sections[i].style.height = window.innerHeight +'px';
 		}
 
+		if(document.attachEvent){
+			document.attachEvent('onmousewheel', mouseWheelHandler);
+		} else if(document.addEventListener){
+			document.addEventListener('mousewheel', mouseWheelHandler);
+			document.addEventListener('DOMMouseScroll', mouseWheelHandler);
+			document.addEventListener('touchstart', touchStartHandler);
+			document.addEventListener('touchmove', touchMoveHandler);
+
+		}
+	};
+
+	var movementHandler = function(delta){
 		var increment = -delta,
-			rect = root.sections[config.index].getBoundingClientRect(),
-			scrollTop = document.body.scrollTop;
+			currentTop = root.sections[config.index].offsetTop;
 
 		if(root.decayTimer){
 			clearTimeout(root.decayTimer);
 		}
 
-		if( (config.progress > 0 && config.progress + increment < 0) ||
-			(config.progress < 0 && config.progress + increment > 0) ){
-			config.progress = 0;
-		} else {
-			config.progress += increment;
-		}
+		config.progress += increment;
 
-		// if((config.progress < 0 && config.index === 0 && document.body.scrollTop <= 0) ||
-		// 	(config.progress > 0 && config.index === root.sections.length - 1)){
-		// 	config.progress = 0;
-		// }
+		if((config.progress < 0 && config.index === 0) ||
+			(config.progress > 0 && config.index === root.sections.length - 1)){
+			config.progress = 0;
+		}
 
 		if(config.progress > 1){
 			config.progress = 1;
@@ -148,7 +154,6 @@
 		}
 
 		if((config.progress === 1 || config.progress === -1) && !config.complete){
-			// complete
 			config.complete = true;
 			root.spinner.updateSpinner(config.progress);
 			root.spinner.completeSpinner();
@@ -158,36 +163,20 @@
 				goToSection(config.index);
 			}
 		} else if (!config.complete){
-			// incomplete
 			root.spinner.updateSpinner(config.progress);
 
-			var scrollStart;
-			if(config.progress > 0){
-				scrollStart = root.offsets[config.index].bottom - window.innerHeight;
-			} else {
-				scrollStart = root.offsets[config.index].top;
-			}
-
-			if(config.progress !== 0){
-				// a little lead-scroll
-				scrollTo(0, scrollStart + config.progress * config.leadScroll);
-			}
+			// a little lead-scroll
+			scrollTo(0, currentTop + config.progress * config.leadScroll);
 		}
 	};
 
 	var mouseWheelHandler = function(event){
 		var event = window.event || event,
 			delta = event.wheelDeltaY || -event.detail,
-			progressDelta = delta / 100 * config.mouseSensitivity,
-			offsets = root.offsets[config.index],
-			scrollStartTop = offsets.top,
-			scrollStartBottom = offsets.bottom,
-			scrollTop = document.body.scrollTop,
-			windowHeight = window.innerHeight;
+			progressDelta = delta / 100 * config.mouseSensitivity;
 
 		if(!config.firstDelta){
 			config.firstDelta = delta;
-
 			if(Math.abs(delta) > 25 || !event.wheelDeltaY){
 				config.mouseSensitivity = 0.5;
 			}
@@ -195,23 +184,6 @@
 			if(!event.wheelDeltaY){
 				config.scrollTime = 500;
 			}
-		}
-
-		if(root.decayTimer){
-			clearTimeout(root.decayTimer)
-		}
-
-		var newScrollBottom = scrollTop + windowHeight - delta,
-			newScrollTop = scrollTop - delta;
-
-		if(scrollTop + windowHeight - delta > scrollStartBottom){
-	//		document.body.scrollTop = scrollStartBottom;
-		} else if(newScrollBottom < scrollStartBottom && config.progress === 0 && delta < 0){
-			return true;
-		} else if(scrollTop > scrollStartTop && config.progress <= 0){
-			return true;
-		} else if(scrollTop <= 0){
-			return true;
 		}
 
 		movementHandler(progressDelta);
@@ -231,26 +203,11 @@
 		var touch = event.touches[0],
 			x = touch.pageX,
 			y = touch.pageY,
-			delta = (root.lastY - y),
-			offsets = root.offsets[config.index],
-			scrollStartTop = offsets.top,
-			scrollStartBottom = offsets.bottom,
-			scrollTop = document.body.scrollTop;
+			delta = (root.lastY - y);
 
 		root.lastY = y;
 
 		delta /= 100 * config.touchSensitivity;
-
-		var newScrollBottom = scrollTop + windowHeight - delta,
-			newScrollTop = scrollTop - delta;
-
-		if(scrollTop + windowHeight - delta > scrollStartBottom){
-	//		document.body.scrollTop = scrollStartBottom;
-		} else if(newScrollBottom < scrollStartBottom && config.progress === 0 && delta < 0){
-			return true;
-		} else if(scrollTop > scrollStartTop && config.progress <= 0){
-			return true;
-		}
 
 		movementHandler(delta);
 
@@ -258,12 +215,6 @@
 	};
 
 	var goToSection = function(index){
-		if(typeof root.callbacks[index] === 'object'){
-			if(typeof root.callbacks[index].scrollStart === 'function'){
-				root.callbacks[index].scrollStart();
-			}
-		}
-
 		scrollToElement(root.sections[index], config.scrollTime);
 	};
 
@@ -276,7 +227,7 @@
 
     var scrollTick = function(t, initial, amount){
     	if(t === config.scrollTime){
-    		return scrollEnd();
+    		return;
     	}
 
     	var x = t / config.scrollTime;
@@ -288,14 +239,6 @@
 		setTimeout(function(){
 			scrollTick(t + 10, initial, amount);
 		});
-	};
-
-	var scrollEnd = function(){
-		if(typeof root.callbacks[config.index] === 'object'){
-			if(typeof root.callbacks[config.index].scrollEnd === 'function'){
-				root.callbacks[config.index].scrollEnd();
-			}
-		}
 	};
 
 	var drawArc = function(percent){
@@ -328,37 +271,6 @@
 		}
 		ctx.stroke();
 		ctx.closePath();
-	};
-
-	var init = function(){
-		scrollTo(0, 0);
-		root.width = config.radius * 2 + config.stroke * 2;
-		root.height = config.radius * 2 + config.stroke * 2;
-		root.sections = document.getElementsByTagName('section');
-		root.spinner = new Spinner();
-		root.spinner.createSpinner();
-		root.offsets = [];
-		root.callbacks = {};
-
-		if(typeof scrollSpinner === 'object'){
-			root.callbacks = scrollSpinner;
-		}
-
-		var i, l = root.sections.length;
-		for(i = 0; i < l; i++){
-			var rect = root.sections[i].getBoundingClientRect();
-			root.offsets.push({ top: rect.top, bottom: rect.bottom });
-		}
-
-		if(document.attachEvent){
-			document.attachEvent('onmousewheel', mouseWheelHandler);
-		} else if(document.addEventListener){
-			document.addEventListener('mousewheel', mouseWheelHandler);
-			document.addEventListener('DOMMouseScroll', mouseWheelHandler);
-			document.addEventListener('touchstart', touchStartHandler);
-			document.addEventListener('touchmove', touchMoveHandler);
-
-		}
 	};
 
 	document.addEventListener('DOMContentLoaded', init);
