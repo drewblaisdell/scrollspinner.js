@@ -1,5 +1,9 @@
-(function(){
-	var root = this;
+var scrollSpinner = function(){
+	// object declarations to avoid hoisting confusion
+	var root = this,
+		sections = [],
+		spinEngine,
+		spinnerSize = {};
 
 	var config = {
 		color: 'rgba(100,100,100,0.5)',
@@ -25,9 +29,9 @@
 
 		this.createSpinner = function(){
 			var canvas = document.createElement('canvas');
-			canvas.id = 'passage';
-			canvas.width = root.width;
-			canvas.height = root.height;
+			canvas.id = 'scrollspinner';
+			canvas.width = spinnerSize.width;
+			canvas.height = spinnerSize.height;
 			canvas.style.position = 'fixed';
 			canvas.style.bottom = '5px';
 			canvas.style.right = '5px';
@@ -51,7 +55,7 @@
 		};
 
 		this.decaySpinner = function(){
-			var currentTop = root.sections[config.index].offsetTop;			
+			var currentTop = sections[config.index].offsetTop;			
 			
 			scrollTo(0, currentTop + config.progress * config.leadScroll);
 
@@ -75,7 +79,7 @@
 			var ctx = root.context;
 
 			ctx.beginPath();
-			ctx.arc(root.width / 2, root.height / 2, config.radius - config.stroke / 2 - 2, 0, Math.PI * 2, false);
+			ctx.arc(spinnerSize.width / 2, spinnerSize.height / 2, config.radius - config.stroke / 2 - 2, 0, Math.PI * 2, false);
 			ctx.fillStyle = (config.progress > 0) ? config.fillColor : config.reverseFillColor;
 			ctx.fill();
 
@@ -94,7 +98,7 @@
 
 			var ctx = root.context;
 			ctx.beginPath();
-			ctx.arc(root.width / 2, root.height / 2, (config.radius - config.stroke / 2 - 2) * (extra / 30), 0, Math.PI * 2, false);
+			ctx.arc(spinnerSize.width / 2, spinnerSize.height / 2, (config.radius - config.stroke / 2 - 2) * (extra / 30), 0, Math.PI * 2, false);
 			ctx.fillStyle = (config.progress > 0) ? config.fillColor : config.reverseFillColor;
 			ctx.fill();
 
@@ -109,32 +113,9 @@
 		};
 	}
 
-	var init = function(){
-		root.width = config.radius * 2 + config.stroke * 2;
-		root.height = config.radius * 2 + config.stroke * 2;
-		root.sections = document.getElementsByTagName('section');
-		root.spinner = new Spinner();
-		root.spinner.createSpinner();
-
-		var i, l = root.sections.length;
-		for(i = 0; i < l; i++){
-			root.sections[i].style.height = window.innerHeight +'px';
-		}
-
-		if(document.attachEvent){
-			document.attachEvent('onmousewheel', mouseWheelHandler);
-		} else if(document.addEventListener){
-			document.addEventListener('mousewheel', mouseWheelHandler);
-			document.addEventListener('DOMMouseScroll', mouseWheelHandler);
-			document.addEventListener('touchstart', touchStartHandler);
-			document.addEventListener('touchmove', touchMoveHandler);
-
-		}
-	};
-
 	var movementHandler = function(delta){
 		var increment = -delta,
-			currentTop = root.sections[config.index].offsetTop;
+			currentTop = sections[config.index].offsetTop;
 
 		if(root.decayTimer){
 			clearTimeout(root.decayTimer);
@@ -143,7 +124,7 @@
 		config.progress += increment;
 
 		if((config.progress < 0 && config.index === 0) ||
-			(config.progress > 0 && config.index === root.sections.length - 1)){
+			(config.progress > 0 && config.index === sections.length - 1)){
 			config.progress = 0;
 		}
 
@@ -155,15 +136,15 @@
 
 		if((config.progress === 1 || config.progress === -1) && !config.complete){
 			config.complete = true;
-			root.spinner.updateSpinner(config.progress);
-			root.spinner.completeSpinner();
+			spinEngine.updateSpinner(config.progress);
+			spinEngine.completeSpinner();
 
-			if(config.index + config.progress < root.sections.length && config.index + config.progress > -1){
+			if(config.index + config.progress < sections.length && config.index + config.progress > -1){
 				config.index += config.progress;
 				goToSection(config.index);
 			}
 		} else if (!config.complete){
-			root.spinner.updateSpinner(config.progress);
+			spinEngine.updateSpinner(config.progress);
 
 			// a little lead-scroll
 			scrollTo(0, currentTop + config.progress * config.leadScroll);
@@ -215,7 +196,7 @@
 	};
 
 	var goToSection = function(index){
-		scrollToElement(root.sections[index], config.scrollTime);
+		scrollToElement(sections[index], config.scrollTime);
 	};
 
 	var scrollToElement = function(element, duration) {
@@ -245,7 +226,7 @@
 		var ctx = root.context,
 			reverse = (percent < 0) ? true : false;
 		if(percent === 0){
-			ctx.clearRect(0, 0, root.width, root.height);
+			ctx.clearRect(0, 0, spinnerSize.width, spinnerSize.height);
 			return false;
 		} else if(percent === 1 || percent === -1){
 			startAngle = 0;
@@ -260,9 +241,9 @@
 			}
 		}
 
-		ctx.clearRect(0, 0, root.width, root.height);
+		ctx.clearRect(0, 0, spinnerSize.width, spinnerSize.height);
 		ctx.beginPath();
-		ctx.arc(root.width / 2, root.height / 2, config.radius, startAngle, endAngle, reverse);
+		ctx.arc(spinnerSize.width / 2, spinnerSize.height / 2, config.radius, startAngle, endAngle, reverse);
 		ctx.lineWidth = 10;
 		if(reverse){
 			ctx.strokeStyle = config.reverseColor;
@@ -273,5 +254,34 @@
 		ctx.closePath();
 	};
 
-	document.addEventListener('DOMContentLoaded', init);
-}());
+	var init = function(){
+		spinnerSize.width = config.radius * 2 + config.stroke * 2;
+		spinnerSize.height = config.radius * 2 + config.stroke * 2;
+		sections = document.getElementsByTagName('section');
+		spinEngine = new Spinner();
+		spinEngine.createSpinner();
+
+		var i, l = sections.length;
+		for(i = 0; i < l; i++){
+			sections[i].style.height = window.innerHeight +'px';
+		}
+
+		if(document.attachEvent){
+			document.attachEvent('onmousewheel', mouseWheelHandler);
+		} else if(document.addEventListener){
+			document.addEventListener('mousewheel', mouseWheelHandler);
+			document.addEventListener('DOMMouseScroll', mouseWheelHandler);
+			document.addEventListener('touchstart', touchStartHandler);
+			document.addEventListener('touchmove', touchMoveHandler);
+
+		}
+	};
+
+	return init();
+
+	//document.addEventListener('DOMContentLoaded', init);
+};
+
+document.addEventListener('DOMContentLoaded', function(){
+	scrollSpinner();
+});
