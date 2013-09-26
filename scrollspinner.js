@@ -2,6 +2,7 @@ var scrollSpinner = function(config){
 	// object declarations to avoid hoisting confusion
 	var root = this,
 		sections = [],
+		sectionList,
 		settings,
 		spinEngine,
 		spinnerSize = {};
@@ -16,10 +17,10 @@ var scrollSpinner = function(config){
 		index: 0,
 		leadScroll: 30,
 		progress: 0,
-		radius: 30,
-		sectionNames: 'section-name',
+		radius: 20,
+		sectionNames: [],
 		scrollTime: 1000,
-		stroke: 10,
+		stroke: 12,
 		mouseSensitivity: .05,
 		sleepPeriod: 1000,
 		touchSensitivity: 2
@@ -115,7 +116,37 @@ var scrollSpinner = function(config){
 	}
 
 	var createSectionList = function(){
+		var name, item,
+			sectionNames = settings.sectionNames;
+		if(sectionNames.length > 0){
+			sectionList = document.createElement('ul');
+			sectionList.id = 'scrollspinner-names';
 
+			for(var i = 0, l = sectionNames.length; i < l; i++){
+				item = document.createElement('li');
+				if(i === 0){
+					item.className = 'current-section';
+				}
+
+				item.innerHTML = sectionNames[i];
+				sectionList.appendChild(item);
+			}
+
+			document.body.appendChild(sectionList);
+		}
+	};
+
+	var changeCurrentSection = function(sectionIndex, reverse){
+		var sectionList = document.getElementById('scrollspinner-names'),
+			current = sectionList.getElementsByClassName('current-section'),
+			next = sectionList.children[sectionIndex];
+
+		current[0].className = 'last-section';
+		next.className = 'current-section';
+
+		setTimeout(function(){
+			sectionList.getElementsByClassName('last-section')[0].className = '';
+		}, 1000);
 	};
 
 	var movementHandler = function(delta){
@@ -147,6 +178,7 @@ var scrollSpinner = function(config){
 			if(settings.index + settings.progress < sections.length && settings.index + settings.progress > -1){
 				settings.index += settings.progress;
 				goToSection(settings.index);
+				changeCurrentSection(settings.index);
 			}
 		} else if (!settings.complete){
 			spinEngine.updateSpinner(settings.progress);
@@ -274,6 +306,8 @@ var scrollSpinner = function(config){
 		spinEngine = new Spinner();
 		spinEngine.createSpinner();
 
+		createSectionList();
+
 		var i, l = sections.length;
 		for(i = 0; i < l; i++){
 			sections[i].style.height = window.innerHeight +'px';
@@ -295,5 +329,9 @@ var scrollSpinner = function(config){
 };
 
 document.addEventListener('DOMContentLoaded', function(){
-	scrollSpinner();
+	scrollSpinner({
+		color: 'rgba(0, 0, 0, 1)',
+		reverseColor: 'rgba(0, 0, 0, 1)',
+		sectionNames: [ "scrollspinner.js", "Lorem Ipsum", "not much", "hey"]
+	});
 });
