@@ -1,11 +1,12 @@
-var scrollSpinner = function(){
+var scrollSpinner = function(config){
 	// object declarations to avoid hoisting confusion
 	var root = this,
 		sections = [],
+		settings,
 		spinEngine,
 		spinnerSize = {};
 
-	var config = {
+	var default_settings = {
 		color: 'rgba(100,100,100,0.5)',
 		reverseColor: 'rgba(100,100,100,0.5)',
 		complete: false,
@@ -16,11 +17,11 @@ var scrollSpinner = function(){
 		leadScroll: 30,
 		progress: 0,
 		radius: 30,
+		sectionNames: 'section-name',
 		scrollTime: 1000,
 		stroke: 10,
 		mouseSensitivity: .05,
 		sleepPeriod: 1000,
-		threshold: 100,
 		touchSensitivity: 2
 	};
 
@@ -48,29 +49,29 @@ var scrollSpinner = function(){
 			if(percent < 1 && percent > -1){
 				root.sleepTimer = setTimeout(function(){
 					that.decaySpinner();
-				}, config.sleepPeriod);
+				}, settings.sleepPeriod);
 			}
 			
 			drawArc(percent);
 		};
 
 		this.decaySpinner = function(){
-			var currentTop = sections[config.index].offsetTop;			
+			var currentTop = sections[settings.index].offsetTop;			
 			
-			scrollTo(0, currentTop + config.progress * config.leadScroll);
+			scrollTo(0, currentTop + settings.progress * settings.leadScroll);
 
-			config.complete = false;
-			if(config.progress === 0){
+			settings.complete = false;
+			if(settings.progress === 0){
 				return clearTimeout(root.decayTimer);
 			}
 
-			if(config.progress > 0){
-				config.progress = (config.progress > config.decaySpeed) ? config.progress - config.decaySpeed : 0;
+			if(settings.progress > 0){
+				settings.progress = (settings.progress > settings.decaySpeed) ? settings.progress - settings.decaySpeed : 0;
 			} else {
-				config.progress = (config.progress < config.decaySpeed) ? config.progress + config.decaySpeed : 0;
+				settings.progress = (settings.progress < settings.decaySpeed) ? settings.progress + settings.decaySpeed : 0;
 			}
 			
-			drawArc(config.progress);
+			drawArc(settings.progress);
 
 			root.decayTimer = setTimeout(that.decaySpinner, 20);
 		};
@@ -79,8 +80,8 @@ var scrollSpinner = function(){
 			var ctx = root.context;
 
 			ctx.beginPath();
-			ctx.arc(spinnerSize.width / 2, spinnerSize.height / 2, config.radius - config.stroke / 2 - 2, 0, Math.PI * 2, false);
-			ctx.fillStyle = (config.progress > 0) ? config.fillColor : config.reverseFillColor;
+			ctx.arc(spinnerSize.width / 2, spinnerSize.height / 2, settings.radius - settings.stroke / 2 - 2, 0, Math.PI * 2, false);
+			ctx.fillStyle = (settings.progress > 0) ? settings.fillColor : settings.reverseFillColor;
 			ctx.fill();
 
 			setTimeout(function(){
@@ -98,8 +99,8 @@ var scrollSpinner = function(){
 
 			var ctx = root.context;
 			ctx.beginPath();
-			ctx.arc(spinnerSize.width / 2, spinnerSize.height / 2, (config.radius - config.stroke / 2 - 2) * (extra / 30), 0, Math.PI * 2, false);
-			ctx.fillStyle = (config.progress > 0) ? config.fillColor : config.reverseFillColor;
+			ctx.arc(spinnerSize.width / 2, spinnerSize.height / 2, (settings.radius - settings.stroke / 2 - 2) * (extra / 30), 0, Math.PI * 2, false);
+			ctx.fillStyle = (settings.progress > 0) ? settings.fillColor : settings.reverseFillColor;
 			ctx.fill();
 
 			setTimeout(function(){
@@ -108,62 +109,66 @@ var scrollSpinner = function(){
 		};
 
 		this.completeSpinnerEnd = function(){
-			config.complete = false;
-			config.progress = 0;
+			settings.complete = false;
+			settings.progress = 0;
 		};
 	}
 
+	var createSectionList = function(){
+
+	};
+
 	var movementHandler = function(delta){
 		var increment = -delta,
-			currentTop = sections[config.index].offsetTop;
+			currentTop = sections[settings.index].offsetTop;
 
 		if(root.decayTimer){
 			clearTimeout(root.decayTimer);
 		}
 
-		config.progress += increment;
+		settings.progress += increment;
 
-		if((config.progress < 0 && config.index === 0) ||
-			(config.progress > 0 && config.index === sections.length - 1)){
-			config.progress = 0;
+		if((settings.progress < 0 && settings.index === 0) ||
+			(settings.progress > 0 && settings.index === sections.length - 1)){
+			settings.progress = 0;
 		}
 
-		if(config.progress > 1){
-			config.progress = 1;
-		} else if(config.progress < -1){
-			config.progress = -1;
+		if(settings.progress > 1){
+			settings.progress = 1;
+		} else if(settings.progress < -1){
+			settings.progress = -1;
 		}
 
-		if((config.progress === 1 || config.progress === -1) && !config.complete){
-			config.complete = true;
-			spinEngine.updateSpinner(config.progress);
+		if((settings.progress === 1 || settings.progress === -1) && !settings.complete){
+			settings.complete = true;
+			spinEngine.updateSpinner(settings.progress);
 			spinEngine.completeSpinner();
 
-			if(config.index + config.progress < sections.length && config.index + config.progress > -1){
-				config.index += config.progress;
-				goToSection(config.index);
+			if(settings.index + settings.progress < sections.length && settings.index + settings.progress > -1){
+				settings.index += settings.progress;
+				goToSection(settings.index);
 			}
-		} else if (!config.complete){
-			spinEngine.updateSpinner(config.progress);
+		} else if (!settings.complete){
+			spinEngine.updateSpinner(settings.progress);
 
 			// a little lead-scroll
-			scrollTo(0, currentTop + config.progress * config.leadScroll);
+			scrollTo(0, currentTop + settings.progress * settings.leadScroll);
 		}
 	};
 
 	var mouseWheelHandler = function(event){
 		var event = window.event || event,
 			delta = event.wheelDeltaY || -event.detail,
-			progressDelta = delta / 100 * config.mouseSensitivity;
+			progressDelta = delta / 100 * settings.mouseSensitivity;
 
-		if(!config.firstDelta){
-			config.firstDelta = delta;
+		if(!settings.firstDelta){
+			settings.firstDelta = delta;
 			if(Math.abs(delta) > 25 || !event.wheelDeltaY){
-				config.mouseSensitivity = 0.5;
+				settings.mouseSensitivity = 0.5;
 			}
 
 			if(!event.wheelDeltaY){
-				config.scrollTime = 500;
+				settings.scrollTime = 500;
 			}
 		}
 
@@ -188,7 +193,7 @@ var scrollSpinner = function(){
 
 		root.lastY = y;
 
-		delta /= 100 * config.touchSensitivity;
+		delta /= 100 * settings.touchSensitivity;
 
 		movementHandler(delta);
 
@@ -196,7 +201,7 @@ var scrollSpinner = function(){
 	};
 
 	var goToSection = function(index){
-		scrollToElement(sections[index], config.scrollTime);
+		scrollToElement(sections[index], settings.scrollTime);
 	};
 
 	var scrollToElement = function(element, duration) {
@@ -207,11 +212,11 @@ var scrollSpinner = function(){
     };
 
     var scrollTick = function(t, initial, amount){
-    	if(t === config.scrollTime){
+    	if(t === settings.scrollTime){
     		return;
     	}
 
-    	var x = t / config.scrollTime;
+    	var x = t / settings.scrollTime;
     	x = x<.5 ? 2*x*x : -1+(4-2*x)*x; // easing with quad in-out
 
     	var position = Math.ceil(initial + x * amount);
@@ -243,20 +248,28 @@ var scrollSpinner = function(){
 
 		ctx.clearRect(0, 0, spinnerSize.width, spinnerSize.height);
 		ctx.beginPath();
-		ctx.arc(spinnerSize.width / 2, spinnerSize.height / 2, config.radius, startAngle, endAngle, reverse);
+		ctx.arc(spinnerSize.width / 2, spinnerSize.height / 2, settings.radius, startAngle, endAngle, reverse);
 		ctx.lineWidth = 10;
 		if(reverse){
-			ctx.strokeStyle = config.reverseColor;
+			ctx.strokeStyle = settings.reverseColor;
 		} else {
-			ctx.strokeStyle = config.color;
+			ctx.strokeStyle = settings.color;
 		}
 		ctx.stroke();
 		ctx.closePath();
 	};
 
-	var init = function(){
-		spinnerSize.width = config.radius * 2 + config.stroke * 2;
-		spinnerSize.height = config.radius * 2 + config.stroke * 2;
+	var init = function(config){
+		settings = config || {};
+
+		for(var i in default_settings){
+			if(!settings[i]){
+				settings[i] = default_settings[i];
+			}
+		}
+
+		spinnerSize.width = settings.radius * 2 + settings.stroke * 2;
+		spinnerSize.height = settings.radius * 2 + settings.stroke * 2;
 		sections = document.getElementsByTagName('section');
 		spinEngine = new Spinner();
 		spinEngine.createSpinner();
@@ -265,6 +278,7 @@ var scrollSpinner = function(){
 		for(i = 0; i < l; i++){
 			sections[i].style.height = window.innerHeight +'px';
 		}
+
 
 		if(document.attachEvent){
 			document.attachEvent('onmousewheel', mouseWheelHandler);
@@ -277,9 +291,7 @@ var scrollSpinner = function(){
 		}
 	};
 
-	return init();
-
-	//document.addEventListener('DOMContentLoaded', init);
+	init(config);
 };
 
 document.addEventListener('DOMContentLoaded', function(){
