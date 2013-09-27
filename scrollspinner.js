@@ -169,6 +169,10 @@ var scrollSpinner = function(config){
 		};
 	}
 
+	var keyPressHandler = function(event){
+
+	};
+
 	var createSectionList = function(){
 		var name, item,
 			sectionNames = settings.sectionNames;
