@@ -9,8 +9,8 @@ var scrollSpinner = function(config){
 		spinnerSize = {};
 
 	var default_settings = {
-		color: 'rgba(100,100,100,0.5)',
-		reverseColor: 'rgba(100,100,100,0.5)',
+		color: 'rgba(0,0,0,1)',
+		reverseColor: 'rgba(0,0,0,1)',
 		complete: false,
 		decaySpeed: 0.02,
 		fillColor: 'rgba(0, 200, 0, 0.5)',
@@ -25,6 +25,16 @@ var scrollSpinner = function(config){
 		mouseSensitivity: .05,
 		sleepPeriod: 1000,
 		touchSensitivity: 2
+	};
+
+	var addListener = function(element, event, handler){
+		if(element.addEventListener){
+			element.addEventListener(event, handler, false);
+		} else if(element.attachEvent){
+			element.attachEvent('on'+ event, false);
+		} else {
+			element['on'+ event] = handler;
+		}
 	};
 
 	function Spinner(){
@@ -145,7 +155,6 @@ var scrollSpinner = function(config){
 
 		setTimeout(function(){
 			sectionList.className = '';
-			sectionList.getElementsByClassName('last-section')[0].className = '';
 		}, 1000);
 	};
 
@@ -319,16 +328,10 @@ var scrollSpinner = function(config){
 			sections[i].style.height = window.innerHeight +'px';
 		}
 
-
-		if(document.attachEvent){
-			document.attachEvent('onmousewheel', mouseWheelHandler);
-		} else if(document.addEventListener){
-			document.addEventListener('mousewheel', mouseWheelHandler);
-			document.addEventListener('DOMMouseScroll', mouseWheelHandler);
-			document.addEventListener('touchstart', touchStartHandler);
-			document.addEventListener('touchmove', touchMoveHandler);
-
-		}
+		addListener(document, 'mousewheel', mouseWheelHandler);
+		addListener(document, 'DOMMouseScroll', mouseWheelHandler);
+		addListener(document, 'touchstart', touchStartHandler);
+		addListener(document, 'touchmove', touchMoveHandler);
 	};
 
 	init(config);
