@@ -1,30 +1,45 @@
-#scrollspinner-names {
+#scrollspinner {
 	position: fixed;
-	right: 72px;
-	bottom: 47px;
+	bottom: 5px;
+	right: 5px;
+	width: 220px;
+}
+
+#scrollspinner canvas {
+	float: right;
+}
+
+#scrollspinner ul {
+	-webkit-transition: all .6s;
+	-webkit-transition-timing-function: cubic-bezier(.26,.39,.14,1);
 	margin: 0;
+	margin-top: 23px;
 	padding: 0;
 	list-style: none;
 	width: 150px;
+	float: left;
+	position: absolute;
 }
 
-#scrollspinner-names li {
+#scrollspinner .visible li {
+	opacity: 0.2;
+	visibility: visible;
+}
+
+#scrollspinner li {
 	-webkit-transition: all .6s;
 	-webkit-transition-timing-function: cubic-bezier(.26,.39,.14,1);
 	opacity: 0;
-	margin-top: 20px;
-	position: absolute;
 	font-weight: bold;
 	text-align: right;
 	width: 100%;
+	height: 20px;
+	line-height: 20px;
+	visibility: hidden;
 }
 
-#scrollspinner-names .current-section {
+#scrollspinner .current-section, #scrollspinner .visible .current-section {
 	opacity: 1;
+	visibility: visible;
 	margin-top: 0;
-}
-
-#scrollspinner-names .last-section {
-	opacity: 0;
-	margin-top: -20px;
 }

@@ -4,6 +4,7 @@ var scrollSpinner = function(config){
 		sections = [],
 		sectionList,
 		settings,
+		spinnerElement,
 		spinEngine,
 		spinnerSize = {};
 
@@ -31,15 +32,11 @@ var scrollSpinner = function(config){
 
 		this.createSpinner = function(){
 			var canvas = document.createElement('canvas');
-			canvas.id = 'scrollspinner';
 			canvas.width = spinnerSize.width;
 			canvas.height = spinnerSize.height;
-			canvas.style.position = 'fixed';
-			canvas.style.bottom = '5px';
-			canvas.style.right = '5px';
 
 			root.context = canvas.getContext('2d');
-			document.body.appendChild(canvas);
+			spinnerElement.appendChild(canvas);
 		};
 
 		this.updateSpinner = function(percent){
@@ -120,7 +117,6 @@ var scrollSpinner = function(config){
 			sectionNames = settings.sectionNames;
 		if(sectionNames.length > 0){
 			sectionList = document.createElement('ul');
-			sectionList.id = 'scrollspinner-names';
 
 			for(var i = 0, l = sectionNames.length; i < l; i++){
 				item = document.createElement('li');
@@ -132,19 +128,23 @@ var scrollSpinner = function(config){
 				sectionList.appendChild(item);
 			}
 
-			document.body.appendChild(sectionList);
+			spinnerElement.appendChild(sectionList);
 		}
 	};
 
 	var changeCurrentSection = function(sectionIndex, reverse){
-		var sectionList = document.getElementById('scrollspinner-names'),
+		var sectionList = spinnerElement.getElementsByTagName('ul')[0],
 			current = sectionList.getElementsByClassName('current-section'),
 			next = sectionList.children[sectionIndex];
 
-		current[0].className = 'last-section';
+		sectionList.className = 'visible';
+		sectionList.style.marginTop = -(sectionIndex * 20) + 23 +'px';
+
+		current[0].className = '';
 		next.className = 'current-section';
 
 		setTimeout(function(){
+			sectionList.className = '';
 			sectionList.getElementsByClassName('last-section')[0].className = '';
 		}, 1000);
 	};
@@ -300,13 +300,19 @@ var scrollSpinner = function(config){
 			}
 		}
 
+		// add scrollspinner container to the DOM
+		spinnerElement = document.createElement('div');
+		spinnerElement.id = 'scrollspinner';
+		document.body.appendChild(spinnerElement);
+
+		createSectionList();
+
 		spinnerSize.width = settings.radius * 2 + settings.stroke * 2;
 		spinnerSize.height = settings.radius * 2 + settings.stroke * 2;
 		sections = document.getElementsByTagName('section');
 		spinEngine = new Spinner();
 		spinEngine.createSpinner();
 
-		createSectionList();
 
 		var i, l = sections.length;
 		for(i = 0; i < l; i++){
