@@ -1,0 +1,30 @@
+#scrollspinner-names {
+	position: fixed;
+	right: 72px;
+	bottom: 47px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	width: 150px;
+}
+
+#scrollspinner-names li {
+	-webkit-transition: all .6s;
+	-webkit-transition-timing-function: cubic-bezier(.26,.39,.14,1);
+	opacity: 0;
+	margin-top: 20px;
+	position: absolute;
+	font-weight: bold;
+	text-align: right;
+	width: 100%;
+}
+
+#scrollspinner-names .current-section {
+	opacity: 1;
+	margin-top: 0;
+}
+
+#scrollspinner-names .last-section {
+	opacity: 0;
+	margin-top: -20px;
+}
