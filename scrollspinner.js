@@ -47,7 +47,20 @@ var scrollSpinner = function(config){
 
 			root.context = canvas.getContext('2d');
 			spinnerElement.appendChild(canvas);
+
+			that.drawBackground();
 		};
+
+		this.drawBackground = function(){
+			var ctx = root.context;
+		
+			ctx.beginPath();
+			ctx.arc(spinnerSize.width / 2, spinnerSize.height / 2, settings.radius, 0, 2 * Math.PI, false);
+			ctx.lineWidth = 10;
+			ctx.strokeStyle = 'rgba(100, 100, 100, 0.5)';
+			ctx.stroke();
+			ctx.closePath();
+		}
 
 		this.updateSpinner = function(percent){
 			if(root.sleepTimer){
@@ -60,7 +73,7 @@ var scrollSpinner = function(config){
 				}, settings.sleepPeriod);
 			}
 			
-			drawArc(percent);
+			that.drawarc(percent);
 		};
 
 		this.decaySpinner = function(){
@@ -79,9 +92,43 @@ var scrollSpinner = function(config){
 				settings.progress = (settings.progress < settings.decaySpeed) ? settings.progress + settings.decaySpeed : 0;
 			}
 			
-			drawArc(settings.progress);
+			that.drawarc(settings.progress);
 
 			root.decayTimer = setTimeout(that.decaySpinner, 20);
+		};
+
+		this.drawarc = function(percent){
+			var ctx = root.context,
+				reverse = (percent < 0) ? true : false;
+			if(percent === 0){
+				ctx.clearRect(0, 0, spinnerSize.width, spinnerSize.height);
+				that.drawBackground();
+				return false;
+			} else if(percent === 1 || percent === -1){
+				startAngle = 0;
+				endAngle = Math.PI * 2;
+			} else {
+				if(reverse){
+					startAngle = Math.PI * 1.5;
+					endAngle = Math.PI * 1.5 + Math.PI * 2 * percent;
+				} else {
+					startAngle = Math.PI * 1.5;
+					endAngle = Math.PI * 2 * percent - Math.PI * .5;
+				}
+			}
+
+			ctx.clearRect(0, 0, spinnerSize.width, spinnerSize.height);
+			that.drawBackground();
+			ctx.beginPath();
+			ctx.arc(spinnerSize.width / 2, spinnerSize.height / 2, settings.radius, startAngle, endAngle, reverse);
+			ctx.lineWidth = 10;
+			if(reverse){
+				ctx.strokeStyle = settings.reverseColor;
+			} else {
+				ctx.strokeStyle = settings.color;
+			}
+			ctx.stroke();
+			ctx.closePath();
 		};
 
 		this.completeSpinner = function(){
@@ -103,7 +150,7 @@ var scrollSpinner = function(config){
 				return this.completeSpinnerEnd();
 			}
 			
-			drawArc(extra / 30);
+			that.drawarc(extra / 30);
 
 			var ctx = root.context;
 			ctx.beginPath();
@@ -148,7 +195,7 @@ var scrollSpinner = function(config){
 			next = sectionList.children[sectionIndex];
 
 		sectionList.className = 'visible';
-		sectionList.style.marginTop = -(sectionIndex * 20) + 23 +'px';
+		sectionList.style.marginTop = -(sectionIndex * 20) + 21 +'px';
 
 		current[0].className = '';
 		next.className = 'current-section';
@@ -266,38 +313,6 @@ var scrollSpinner = function(config){
 		setTimeout(function(){
 			scrollTick(t + 10, initial, amount);
 		});
-	};
-
-	var drawArc = function(percent){
-		var ctx = root.context,
-			reverse = (percent < 0) ? true : false;
-		if(percent === 0){
-			ctx.clearRect(0, 0, spinnerSize.width, spinnerSize.height);
-			return false;
-		} else if(percent === 1 || percent === -1){
-			startAngle = 0;
-			endAngle = Math.PI * 2;
-		} else {
-			if(reverse){
-				startAngle = Math.PI * 1.5;
-				endAngle = Math.PI * 1.5 + Math.PI * 2 * percent;
-			} else {
-				startAngle = Math.PI * 1.5;
-				endAngle = Math.PI * 2 * percent - Math.PI * .5;
-			}
-		}
-
-		ctx.clearRect(0, 0, spinnerSize.width, spinnerSize.height);
-		ctx.beginPath();
-		ctx.arc(spinnerSize.width / 2, spinnerSize.height / 2, settings.radius, startAngle, endAngle, reverse);
-		ctx.lineWidth = 10;
-		if(reverse){
-			ctx.strokeStyle = settings.reverseColor;
-		} else {
-			ctx.strokeStyle = settings.color;
-		}
-		ctx.stroke();
-		ctx.closePath();
 	};
 
 	var init = function(config){
