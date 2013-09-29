@@ -57,7 +57,7 @@ var scrollSpinner = function(config){
 			ctx.beginPath();
 			ctx.arc(spinnerSize.width / 2, spinnerSize.height / 2, settings.radius, 0, 2 * Math.PI, false);
 			ctx.lineWidth = 10;
-			ctx.strokeStyle = 'rgba(100, 100, 100, 0.5)';
+			ctx.strokeStyle = 'rgba(100, 100, 100, 0.3)';
 			ctx.stroke();
 			ctx.closePath();
 		}
@@ -170,6 +170,18 @@ var scrollSpinner = function(config){
 	}
 
 	var keyPressHandler = function(event){
+		var keyCode = event.keyCode;
+		if(keyCode === 40 || keyCode === 39){
+			// down or right arrow keypress
+			settings.progress = 1;
+			movementHandler(0);
+			event.preventDefault();
+		} else if (keyCode === 38 || keyCode === 37){
+			// up or left arrow keypress
+			settings.progress = -1;
+			movementHandler(0);
+			event.preventDefault();
+		}
 
 	};
 
@@ -347,6 +359,7 @@ var scrollSpinner = function(config){
 			sections[i].style.height = window.innerHeight +'px';
 		}
 
+		addListener(document, 'keydown', keyPressHandler);
 		addListener(document, 'mousewheel', mouseWheelHandler);
 		addListener(document, 'DOMMouseScroll', mouseWheelHandler);
 		addListener(document, 'touchstart', touchStartHandler);
