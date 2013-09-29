@@ -221,6 +221,14 @@ var scrollSpinner = function(config){
 		}, 1000);
 	};
 
+	var sectionListMouseOverHandler = function(){
+		sectionList.className = 'visible';
+	};
+
+	var sectionListMouseOutHandler = function(){
+		sectionList.className = '';
+	};
+
 	var movementHandler = function(delta){
 		var increment = -delta,
 			currentTop = sections[settings.index].offsetTop;
@@ -359,6 +367,8 @@ var scrollSpinner = function(config){
 			sections[i].style.height = window.innerHeight +'px';
 		}
 
+		addListener(sectionList, 'mouseover', sectionListMouseOverHandler);
+		addListener(sectionList, 'mouseout', sectionListMouseOutHandler);
 		addListener(document, 'keydown', keyPressHandler);
 		addListener(document, 'mousewheel', mouseWheelHandler);
 		addListener(document, 'DOMMouseScroll', mouseWheelHandler);
