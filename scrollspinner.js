@@ -4,7 +4,7 @@ var scrollSpinner = function(config){
 		index = 0,
 		progress = 0,
 		root = this,
-		sections = [],
+		sectionOffsets = [],
 		sectionList,
 		settings,
 		spinnerElement,
@@ -19,7 +19,7 @@ var scrollSpinner = function(config){
 		reverseFillColor: 'rgba(255, 161, 0, 0.5)',
 		leadScroll: 30,
 		radius: 20,
-		sectionNames: [],
+		sections: [],
 		scrollTime: 1000,
 		stroke: 12,
 		mouseSensitivity: .05,
@@ -77,7 +77,7 @@ var scrollSpinner = function(config){
 		};
 
 		this.decaySpinner = function(){
-			var currentTop = sections[index].offsetTop;			
+			var currentTop = sectionOffsets[index].offsetTop;			
 			
 			scrollTo(0, currentTop + progress * settings.leadScroll);
 
@@ -93,6 +93,11 @@ var scrollSpinner = function(config){
 			}
 			
 			that.drawarc(progress);
+
+			// onSpin callback
+			if(typeof settings.sections[index].onSpin === 'function'){
+				settings.sections[index].onSpin(progress);
+			}
 
 			root.decayTimer = setTimeout(that.decaySpinner, 20);
 		};
@@ -187,17 +192,17 @@ var scrollSpinner = function(config){
 
 	var createSectionList = function(){
 		var name, item,
-			sectionNames = settings.sectionNames;
-		if(sectionNames.length > 0){
+			sections = settings.sections;
+		if(sections.length > 0){
 			sectionList = document.createElement('ul');
 
-			for(var i = 0, l = sectionNames.length; i < l; i++){
+			for(var i = 0, l = sections.length; i < l; i++){
 				item = document.createElement('li');
 				if(i === 0){
 					item.className = 'current-section';
 				}
 
-				item.innerHTML = sectionNames[i];
+				item.innerHTML = sections[i].name;
 				sectionList.appendChild(item);
 			}
 
@@ -231,7 +236,7 @@ var scrollSpinner = function(config){
 
 	var movementHandler = function(delta){
 		var increment = -delta,
-			currentTop = sections[index].offsetTop;
+			currentTop = sectionOffsets[index].offsetTop;
 
 		if(root.decayTimer){
 			clearTimeout(root.decayTimer);
@@ -240,7 +245,7 @@ var scrollSpinner = function(config){
 		progress += increment;
 
 		if((progress < 0 && index === 0) ||
-			(progress > 0 && index === sections.length - 1)){
+			(progress > 0 && index === sectionOffsets.length - 1)){
 			progress = 0;
 		}
 
@@ -255,7 +260,7 @@ var scrollSpinner = function(config){
 			spinEngine.updateSpinner(progress);
 			spinEngine.completeSpinner();
 
-			if(index + progress < sections.length && index + progress > -1){
+			if(index + progress < sectionOffsets.length && index + progress > -1){
 				index += progress;
 				goToSection(index);
 				changeCurrentSection(index);
@@ -265,6 +270,11 @@ var scrollSpinner = function(config){
 
 			// a little lead-scroll
 			scrollTo(0, currentTop + progress * settings.leadScroll);
+
+			// onSpin for each section
+			if(typeof settings.sections[index].onSpin === 'function'){
+				settings.sections[index].onSpin(progress);
+			}
 		}
 	};
 
@@ -313,7 +323,7 @@ var scrollSpinner = function(config){
 	};
 
 	var goToSection = function(index){
-		scrollToElement(sections[index], settings.scrollTime);
+		scrollToElement(sectionOffsets[index], settings.scrollTime);
 	};
 
 	var scrollToElement = function(element, duration) {
@@ -357,14 +367,14 @@ var scrollSpinner = function(config){
 
 		spinnerSize.width = settings.radius * 2 + settings.stroke * 2;
 		spinnerSize.height = settings.radius * 2 + settings.stroke * 2;
-		sections = document.getElementsByTagName('section');
+		sectionOffsets = document.getElementsByTagName('section');
 		spinEngine = new Spinner();
 		spinEngine.createSpinner();
 
 
-		var i, l = sections.length;
+		var i, l = sectionOffsets.length;
 		for(i = 0; i < l; i++){
-			sections[i].style.height = window.innerHeight +'px';
+			sectionOffsets[i].style.height = window.innerHeight +'px';
 		}
 
 		addListener(sectionList, 'mouseover', sectionListMouseOverHandler);
@@ -383,7 +393,21 @@ document.addEventListener('DOMContentLoaded', function(){
 	scrollSpinner({
 		color: 'rgba(0, 0, 0, 1)',
 		reverseColor: 'rgba(0, 0, 0, 1)',
-		sectionNames: [ "scrollspinner.js", "Lorem Ipsum", "not much", "hey"]
+		sections: [ {
+				name: "scrollspinner.js",
+				onSpin: function(progress){
+					
+				}
+			},
+			{
+				name: "Lorem Ipsum"
+			},
+			{
+				name: "not much"
+			},
+			{
+				name: "hey"
+			}]
 	});
 });
 
