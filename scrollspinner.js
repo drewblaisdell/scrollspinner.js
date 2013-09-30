@@ -1,6 +1,9 @@
 var scrollSpinner = function(config){
 	// object declarations to avoid hoisting confusion
-	var root = this,
+	var complete = false,
+		index = 0,
+		progress = 0,
+		root = this,
 		sections = [],
 		sectionList,
 		settings,
@@ -11,13 +14,10 @@ var scrollSpinner = function(config){
 	var default_settings = {
 		color: 'rgba(0,0,0,1)',
 		reverseColor: 'rgba(0,0,0,1)',
-		complete: false,
 		decaySpeed: 0.02,
 		fillColor: 'rgba(0, 200, 0, 0.5)',
 		reverseFillColor: 'rgba(255, 161, 0, 0.5)',
-		index: 0,
 		leadScroll: 30,
-		progress: 0,
 		radius: 20,
 		sectionNames: [],
 		scrollTime: 1000,
@@ -77,22 +77,22 @@ var scrollSpinner = function(config){
 		};
 
 		this.decaySpinner = function(){
-			var currentTop = sections[settings.index].offsetTop;			
+			var currentTop = sections[index].offsetTop;			
 			
-			scrollTo(0, currentTop + settings.progress * settings.leadScroll);
+			scrollTo(0, currentTop + progress * settings.leadScroll);
 
-			settings.complete = false;
-			if(settings.progress === 0){
+			complete = false;
+			if(progress === 0){
 				return clearTimeout(root.decayTimer);
 			}
 
-			if(settings.progress > 0){
-				settings.progress = (settings.progress > settings.decaySpeed) ? settings.progress - settings.decaySpeed : 0;
+			if(progress > 0){
+				progress = (progress > settings.decaySpeed) ? progress - settings.decaySpeed : 0;
 			} else {
-				settings.progress = (settings.progress < settings.decaySpeed) ? settings.progress + settings.decaySpeed : 0;
+				progress = (progress < settings.decaySpeed) ? progress + settings.decaySpeed : 0;
 			}
 			
-			that.drawarc(settings.progress);
+			that.drawarc(progress);
 
 			root.decayTimer = setTimeout(that.decaySpinner, 20);
 		};
@@ -136,7 +136,7 @@ var scrollSpinner = function(config){
 
 			ctx.beginPath();
 			ctx.arc(spinnerSize.width / 2, spinnerSize.height / 2, settings.radius - settings.stroke / 2 - 2, 0, Math.PI * 2, false);
-			ctx.fillStyle = (settings.progress > 0) ? settings.fillColor : settings.reverseFillColor;
+			ctx.fillStyle = (progress > 0) ? settings.fillColor : settings.reverseFillColor;
 			ctx.fill();
 
 			setTimeout(function(){
@@ -155,7 +155,7 @@ var scrollSpinner = function(config){
 			var ctx = root.context;
 			ctx.beginPath();
 			ctx.arc(spinnerSize.width / 2, spinnerSize.height / 2, (settings.radius - settings.stroke / 2 - 2) * (extra / 30), 0, Math.PI * 2, false);
-			ctx.fillStyle = (settings.progress > 0) ? settings.fillColor : settings.reverseFillColor;
+			ctx.fillStyle = (progress > 0) ? settings.fillColor : settings.reverseFillColor;
 			ctx.fill();
 
 			setTimeout(function(){
@@ -164,8 +164,8 @@ var scrollSpinner = function(config){
 		};
 
 		this.completeSpinnerEnd = function(){
-			settings.complete = false;
-			settings.progress = 0;
+			complete = false;
+			progress = 0;
 		};
 	}
 
@@ -173,12 +173,12 @@ var scrollSpinner = function(config){
 		var keyCode = event.keyCode;
 		if(keyCode === 40 || keyCode === 39){
 			// down or right arrow keypress
-			settings.progress = 1;
+			progress = 1;
 			movementHandler(0);
 			event.preventDefault();
 		} else if (keyCode === 38 || keyCode === 37){
 			// up or left arrow keypress
-			settings.progress = -1;
+			progress = -1;
 			movementHandler(0);
 			event.preventDefault();
 		}
@@ -231,40 +231,40 @@ var scrollSpinner = function(config){
 
 	var movementHandler = function(delta){
 		var increment = -delta,
-			currentTop = sections[settings.index].offsetTop;
+			currentTop = sections[index].offsetTop;
 
 		if(root.decayTimer){
 			clearTimeout(root.decayTimer);
 		}
 
-		settings.progress += increment;
+		progress += increment;
 
-		if((settings.progress < 0 && settings.index === 0) ||
-			(settings.progress > 0 && settings.index === sections.length - 1)){
-			settings.progress = 0;
+		if((progress < 0 && index === 0) ||
+			(progress > 0 && index === sections.length - 1)){
+			progress = 0;
 		}
 
-		if(settings.progress > 1){
-			settings.progress = 1;
-		} else if(settings.progress < -1){
-			settings.progress = -1;
+		if(progress > 1){
+			progress = 1;
+		} else if(progress < -1){
+			progress = -1;
 		}
 
-		if((settings.progress === 1 || settings.progress === -1) && !settings.complete){
-			settings.complete = true;
-			spinEngine.updateSpinner(settings.progress);
+		if((progress === 1 || progress === -1) && !complete){
+			complete = true;
+			spinEngine.updateSpinner(progress);
 			spinEngine.completeSpinner();
 
-			if(settings.index + settings.progress < sections.length && settings.index + settings.progress > -1){
-				settings.index += settings.progress;
-				goToSection(settings.index);
-				changeCurrentSection(settings.index);
+			if(index + progress < sections.length && index + progress > -1){
+				index += progress;
+				goToSection(index);
+				changeCurrentSection(index);
 			}
-		} else if (!settings.complete){
-			spinEngine.updateSpinner(settings.progress);
+		} else if (!complete){
+			spinEngine.updateSpinner(progress);
 
 			// a little lead-scroll
-			scrollTo(0, currentTop + settings.progress * settings.leadScroll);
+			scrollTo(0, currentTop + progress * settings.leadScroll);
 		}
 	};
 
@@ -386,3 +386,9 @@ document.addEventListener('DOMContentLoaded', function(){
 		sectionNames: [ "scrollspinner.js", "Lorem Ipsum", "not much", "hey"]
 	});
 });
+
+window.onload = function(){
+	setTimeout(function(){
+		scrollTo(0, 0);
+	}, 0);
+};
