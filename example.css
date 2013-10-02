@@ -26,6 +26,10 @@ section {
 	font-size: 1em;
 }
 
+.flyaway {
+	position: relative;
+}
+
 .headline {
 	text-align: left;
 	font-size: 2em;

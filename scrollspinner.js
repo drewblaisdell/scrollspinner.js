@@ -17,7 +17,7 @@ var scrollSpinner = function(config){
 		decaySpeed: 0.02,
 		fillColor: 'rgba(0, 200, 0, 0.5)',
 		reverseFillColor: 'rgba(255, 161, 0, 0.5)',
-		leadScroll: 30,
+		rubberband: 30,
 		radius: 20,
 		sections: [],
 		scrollTime: 1000,
@@ -79,7 +79,7 @@ var scrollSpinner = function(config){
 		this.decaySpinner = function(){
 			var currentTop = sectionOffsets[index].offsetTop;			
 			
-			scrollTo(0, currentTop + progress * settings.leadScroll);
+			scrollTo(0, currentTop + progress * settings.rubberband);
 
 			complete = false;
 			if(progress === 0){
@@ -269,7 +269,7 @@ var scrollSpinner = function(config){
 			spinEngine.updateSpinner(progress);
 
 			// a little lead-scroll
-			scrollTo(0, currentTop + progress * settings.leadScroll);
+			scrollTo(0, currentTop + progress * settings.rubberband);
 
 			// onSpin for each section
 			if(typeof settings.sections[index].onSpin === 'function'){
@@ -395,9 +395,8 @@ document.addEventListener('DOMContentLoaded', function(){
 		reverseColor: 'rgba(0, 0, 0, 1)',
 		sections: [ {
 				name: "scrollspinner.js",
-				onSpin: function(progress){
-					
-				}
+				onSpin: function(progress){},
+				rubberband: 0,
 			},
 			{
 				name: "Lorem Ipsum"
@@ -411,6 +410,7 @@ document.addEventListener('DOMContentLoaded', function(){
 	});
 });
 
+// hack to "reset" page location on refresh
 window.onload = function(){
 	setTimeout(function(){
 		scrollTo(0, 0);
