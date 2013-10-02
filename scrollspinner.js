@@ -1,6 +1,7 @@
 var scrollSpinner = function(config){
 	// object declarations to avoid hoisting confusion
 	var complete = false,
+		currentSection,
 		index = 0,
 		progress = 0,
 		root = this,
@@ -77,9 +78,10 @@ var scrollSpinner = function(config){
 		};
 
 		this.decaySpinner = function(){
-			var currentTop = sectionOffsets[index].offsetTop;			
-			
-			scrollTo(0, currentTop + progress * settings.rubberband);
+			var currentTop = sectionOffsets[index].offsetTop
+				rubberband = (currentSection && currentSection.rubberband) ? currentSection.rubberband : settings.currentSection;
+
+			scrollTo(0, currentTop + progress * rubberband);
 
 			complete = false;
 			if(progress === 0){
@@ -187,7 +189,6 @@ var scrollSpinner = function(config){
 			movementHandler(0);
 			event.preventDefault();
 		}
-
 	};
 
 	var createSectionList = function(){
@@ -211,19 +212,23 @@ var scrollSpinner = function(config){
 	};
 
 	var changeCurrentSection = function(sectionIndex, reverse){
-		var sectionList = spinnerElement.getElementsByTagName('ul')[0],
-			current = sectionList.getElementsByClassName('current-section'),
-			next = sectionList.children[sectionIndex];
+		if(settings.sections.length > 0){
+			var sectionList = spinnerElement.getElementsByTagName('ul')[0],
+				current = sectionList.getElementsByClassName('current-section'),
+				next = sectionList.children[sectionIndex];
 
-		sectionList.className = 'visible';
-		sectionList.style.marginTop = -(sectionIndex * 20) + 21 +'px';
+			currentSection = settings.sections[sectionIndex];
 
-		current[0].className = '';
-		next.className = 'current-section';
+			sectionList.className = 'visible';
+			sectionList.style.marginTop = -(sectionIndex * 20) + 21 +'px';
 
-		setTimeout(function(){
-			sectionList.className = '';
-		}, 1000);
+			current[0].className = '';
+			next.className = 'current-section';
+
+			setTimeout(function(){
+				sectionList.className = '';
+			}, 1000);
+		}
 	};
 
 	var sectionListMouseOverHandler = function(){
@@ -266,10 +271,12 @@ var scrollSpinner = function(config){
 				changeCurrentSection(index);
 			}
 		} else if (!complete){
+			var rubberband = (currentSection && currentSection.rubberband >= 0) ? currentSection.rubberband : settings.rubberband;
+
 			spinEngine.updateSpinner(progress);
 
 			// a little lead-scroll
-			scrollTo(0, currentTop + progress * settings.rubberband);
+			scrollTo(0, currentTop + progress * rubberband);
 
 			// onSpin for each section
 			if(typeof settings.sections[index].onSpin === 'function'){
@@ -371,6 +378,7 @@ var scrollSpinner = function(config){
 		spinEngine = new Spinner();
 		spinEngine.createSpinner();
 
+		currentSection = settings.sections[0];
 
 		var i, l = sectionOffsets.length;
 		for(i = 0; i < l; i++){
