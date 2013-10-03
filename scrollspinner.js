@@ -1,4 +1,4 @@
-var scrollSpinner = function(config){
+var scrollspinner = function(config){
 	// object declarations to avoid hoisting confusion
 	var complete = false,
 		currentSection,
@@ -79,7 +79,7 @@ var scrollSpinner = function(config){
 
 		this.decaySpinner = function(){
 			var currentTop = sectionOffsets[index].offsetTop
-				rubberband = (currentSection && currentSection.rubberband) ? currentSection.rubberband : settings.currentSection;
+				rubberband = (currentSection && currentSection.rubberband >= 0) ? currentSection.rubberband : settings.rubberband;
 
 			scrollTo(0, currentTop + progress * rubberband);
 
@@ -398,7 +398,7 @@ var scrollSpinner = function(config){
 };
 
 document.addEventListener('DOMContentLoaded', function(){
-	scrollSpinner({
+	scrollspinner({
 		color: 'rgba(0, 0, 0, 1)',
 		reverseColor: 'rgba(0, 0, 0, 1)',
 		sections: [ {
