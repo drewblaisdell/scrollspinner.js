@@ -21,6 +21,7 @@ var scrollspinner = function(config){
 		rubberband: 30,
 		radius: 20,
 		sections: [],
+		scrollDelay: 0,
 		scrollTime: 1000,
 		stroke: 12,
 		mouseSensitivity: .05,
@@ -139,7 +140,10 @@ var scrollspinner = function(config){
 		};
 
 		this.completeSpinner = function(){
-			var ctx = root.context;
+			var ctx = root.context,
+				scrollDelay = (currentSection.scrollDelay && currentSection.scrollDelay >= 0) ? currentSection.scrollDelay : settings.scrollDelay;
+
+			scrollDelay = (scrollDelay > 500) ? scrollDelay : 500;
 
 			ctx.beginPath();
 			ctx.arc(spinnerSize.width / 2, spinnerSize.height / 2, settings.radius - settings.stroke / 2 - 2, 0, Math.PI * 2, false);
@@ -148,7 +152,7 @@ var scrollspinner = function(config){
 
 			setTimeout(function(){
 				that.completeSpinnerTick(30);
-			}, 500);
+			}, scrollDelay);
 			
 		};
 
@@ -266,8 +270,14 @@ var scrollspinner = function(config){
 			spinEngine.completeSpinner();
 
 			if(index + progress < sectionOffsets.length && index + progress > -1){
+				var scrollDelay = (currentSection.scrollDelay && currentSection.scrollDelay >= 0) ? currentSection.scrollDelay : settings.scrollDelay;
+
 				index += progress;
-				goToSection(index);
+				
+				setTimeout(function(){
+					goToSection(index);
+				}, scrollDelay);
+
 				changeCurrentSection(index);
 			}
 		} else if (!complete){
@@ -407,7 +417,8 @@ document.addEventListener('DOMContentLoaded', function(){
 				rubberband: 0,
 			},
 			{
-				name: "Lorem Ipsum"
+				name: "Usage",
+				scrollDelay: 1500
 			},
 			{
 				name: "not much"
